@@ -1,0 +1,49 @@
+import threading
+import socket
+
+class Estatistica:
+    def __init__(self):
+        self.questoes = {}
+
+    def atualizar_estatistica(self, questao, acertos, erros):
+        self.questoes[questao] = {'acertos': acertos, 'erros': erros}
+
+    def obter_estatistica(self):
+        return self.questoes
+
+class Servidor:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.estatistica = Estatistica()
+
+    def iniciar(self):
+        self.socket.bind((self.host, self.port))
+        print(f"Servidor iniciado em {self.host}:{self.port}")
+
+        while True:
+            data, addr = self.socket.recvfrom(1024)
+            thread = threading.Thread(target=self.processar_requisicao, args=(data, addr))
+            thread.start()
+
+    def processar_requisicao(self, data, addr):
+        mensagem = data.decode()
+        partes = mensagem.split(';')
+
+        numero_questao = int(partes[0])
+        numero_alternativas = int(partes[1])
+        respostas = partes[2]
+
+        acertos = respostas.count('V')
+        erros = respostas.count('F')
+
+        self.estatistica.atualizar_estatistica(numero_questao, acertos, erros)
+
+        resposta = f"{numero_questao};{acertos};{erros}".encode()
+        self.socket.sendto(resposta, addr)
+
+        print(f"Recebida resposta da questão {numero_questao} de {addr[0]}:{addr[1]}")
+
+servidor = Servidor('127.0.0.1', 1234)
+servidor.iniciar()

@@ -39,9 +39,6 @@ class Servidor:
         numero_alternativas = int(partes[1])
         respostas = partes[2]
 
-        # Realize aqui a lógica de correção das respostas
-
-        # Exemplo simples: contar V (verdadeiro) como acerto e F (falso) como erro
         acertos = respostas.count('V')
         erros = respostas.count('F')
 
